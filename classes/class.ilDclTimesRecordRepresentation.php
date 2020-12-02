@@ -16,17 +16,7 @@ class ilDclTimesRecordRepresentation extends ilDclBaseRecordRepresentation {
      */
     public function parseFormInput($value)
     {
-        // ilDclGenericMultiInputGUI starts counting of its inputs with 2
-        $i = 2;
-        $times = [];
-        foreach (explode(',', (string) $value) as $time) {
-            $times[$i++] = [
-                // ilDclGenericMultiInputGUI calls setValue() for all of its input
-                // ilDayTimeInputGUI parses values like '08:23'
-                'daytime' => trim($time)
-            ];
-        }
-        return $times;
+        require_once(__DIR__ . '/class.ilDclTimesInputGUI.php');
+        return ilDclTimesInputGUI::_getArray($value);
     }
-
 }

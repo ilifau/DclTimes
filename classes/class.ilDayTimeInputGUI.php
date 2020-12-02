@@ -11,10 +11,8 @@ class ilDayTimeInputGUI extends ilFormPropertyGUI
 
     /**
      * Constructor
-     *
-     * @param	string	$a_title	Title
-     * @param	string	$a_postvar	Post Variable
-     * @param   ilPlugin   $a_plugin
+     * @param string $a_title   Title
+     * @param string $a_postvar Post Variable
      */
     public function __construct($a_title = "", $a_postvar = "")
     {
@@ -23,71 +21,6 @@ class ilDayTimeInputGUI extends ilFormPropertyGUI
 
         parent::__construct($a_title, $a_postvar);
         $this->setType("daytime");
-    }
-
-
-    /**
-     * Set Hours.
-     *
-     * @param int|null $a_hours	Hours
-     */
-    public function setHours($a_hours)
-    {
-        $this->hours = $a_hours;
-    }
-
-    /**
-     * Get Hours.
-     *
-     * @return	int|null	Hours
-     */
-    public function getHours()
-    {
-        return $this->hours;
-    }
-
-    /**
-     * Set Minutes.
-     *
-     * @param int|null	$a_minutes	Minutes
-     */
-    public function setMinutes($a_minutes)
-    {
-        $this->minutes = $a_minutes;
-    }
-
-    /**
-     * Get Minutes.
-     *
-     * @return int|null	Minutes
-     */
-    public function getMinutes()
-    {
-        return $this->minutes;
-    }
-
-
-    /**
-     * Set value by array
-     *
-     * @param	array	$a_values	value array
-     */
-    public function setValueByArray($a_values)
-    {
-        $this->setHours($a_values[$this->getPostVar()]["hh"]);
-        $this->setMinutes($a_values[$this->getPostVar()]["mm"]);
-    }
-
-    /**
-     * Check input, strip slashes etc. set alert, if input is not ok.
-     *
-     * @return	boolean		Input ok, true/false
-     */
-    public function checkInput()
-    {
-        $_POST[$this->getPostVar()]["hh"] = ilUtil::stripSlashes($_POST[$this->getPostVar()]["hh"]);
-        $_POST[$this->getPostVar()]["mm"] = ilUtil::stripSlashes($_POST[$this->getPostVar()]["mm"]);
-        return true;
     }
 
     /**
@@ -109,7 +42,7 @@ class ilDayTimeInputGUI extends ilFormPropertyGUI
         $tpl->setVariable(
             "SELECT_HOURS",
             ilUtil::formSelect(
-                $this->getHours(),
+                $this->hours,
                 $this->getPostVar() . "[hh]",
                 $val,
                 false,
@@ -128,7 +61,7 @@ class ilDayTimeInputGUI extends ilFormPropertyGUI
         $tpl->setVariable(
             "SELECT_MINUTES",
             ilUtil::formSelect(
-                $this->getMinutes(),
+                $this->minutes,
                 $this->getPostVar() . "[mm]",
                 $val,
                 false,
@@ -144,45 +77,102 @@ class ilDayTimeInputGUI extends ilFormPropertyGUI
     }
 
     /**
-     * Serialize data
+     * Check input, strip slashes etc. set alert, if input is not ok.
+     *
+     * @return	boolean		Input ok, true/false
      */
-    public function serializeData()
+    public function checkInput()
     {
-        $data = array( "hours" => $this->getHours(),
-                       "minutes" => $this->getMinutes());
-
-        return serialize($data);
+        $_POST[$this->getPostVar()]["hh"] = ilUtil::stripSlashes($_POST[$this->getPostVar()]["hh"]);
+        $_POST[$this->getPostVar()]["mm"] = ilUtil::stripSlashes($_POST[$this->getPostVar()]["mm"]);
+        return true;
     }
 
     /**
-     * Unserialize data
+     * Get the value as array ['hh' => hour, 'mm' => minute]
+     * @return array
      */
-    public function unserializeData($a_data)
+    public function getValue()
     {
-        $data = unserialize($a_data);
+        return [
+            'hh' => isset($this->hours) ? sprintf("%02d", $this->hours) : null,
+            'mm' => isset($this->minutes) ? sprintf("%02d", $this->minutes) : null,
+        ];
+    }
 
-        $this->setHours($data["hours"]);
-        $this->setMinutes($data["minutes"]);
+    /**
+     * Set the value as array ['hh' => hour, 'mm' => minute]
+     * (Must be an array because ilDclGenericMultiInputGUI calls this with post data)
+     * @var array $a_value
+     */
+    public function setValue($a_value)
+    {
+        $hours = trim($a_value['hh']);
+        $minutes = trim($a_value['mm']);
+
+        $this->hours = (($hours != '') ? (int) $hours : null);
+        $this->minutes = (($minutes != '') ? (int) $minutes : null);
+    }
+
+    /**
+     * Set value from part of a posted array
+     *
+     * @param	array	$a_values	value array
+     */
+    public function setValueByArray($a_values)
+    {
+        $this->setValue($a_values[$this->getPostVar()]);
     }
 
 
     /**
      * Get the value as string (format 08:23)
-     * @return string
+     * @return string|null
      */
-    public function getValue()
+    public function getStringValue()
     {
-        return sprintf("%02d:%02d", $this->getHours(), $this->getMinutes());
+        return self::_getString($this->getValue());
     }
 
     /**
      * Set the value as string (format 08:23)
-     * @var string
+     * @var string|null
      */
-    public function setValue($a_value)
+    public function setStringValue($a_value)
     {
-        $parts = explode(':', (string) $a_value);
-        $this->setHours($parts[0]);
-        $this->setMinutes($parts[1]);
+        $this->setValue(self::_getArray($a_value));
+    }
+
+
+    /**
+     * Get the string value from an array
+     * @param array $a_array ['hh' => hour, 'mm' => minute]
+     * @return string 'hh:mm'
+     */
+    public static function _getString($a_array)
+    {
+        $hours = trim($a_array['hh']);
+        $minutes = trim($a_array['mm']);
+
+        if ($hours != '') {
+            return sprintf("%02d:%02d", (int) $hours, (int) $minutes);
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Get the string value from an array
+     * @param string $a_string
+     * @return array ['hh' => hour, 'mm' => minute]
+     */
+    public static function _getArray($a_string)
+    {
+        $parts = explode(':', trim($a_string));
+        return [
+            'hh' => $parts[0],
+            'mm' => $parts[1]
+        ];
     }
 }

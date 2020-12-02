@@ -17,17 +17,36 @@ class ilDclTimesRecordFieldModel extends ilDclPluginRecordFieldModel
      */
     public function parseValue($value)
     {
-        $times = [];
-        foreach ((array) $value as $entry) {
+        require_once(__DIR__ . '/class.ilDclTimesInputGUI.php');
+        return ilDclTimesInputGUI::_getString($value);
+    }
 
-            $hour = trim($entry['daytime']['hh']);
-            $minute = trim($entry['daytime']['mm']);
 
-            if ($hour != '') {
-                $times[] = sprintf('%02d:%02d', (int) $hour, (int) $minute);
+    /**
+     * @param ilConfirmationGUI $confirmation
+     */
+    public function addHiddenItemsToConfirmation(ilConfirmationGUI &$confirmation)
+    {
+       require_once(__DIR__ . '/class.ilDclTimesInputGUI.php');
+       $values = ilDclTimesInputGUI::_getArray($this->getValue());
+       $this->addHiddenItemsToConfirmationRec($confirmation, 'field_' . $this->field->getId(), $values);
+    }
+
+    /**
+     * @param ilConfirmationGUI $confirmation
+     * @param string            $postvar
+     * @param mixed             $values
+     */
+    protected function addHiddenItemsToConfirmationRec(ilConfirmationGUI &$confirmation, $postvar, $values)
+    {
+        if (is_array($values)) {
+            foreach ($values as $key => $value) {
+                $this->addHiddenItemsToConfirmationRec($confirmation, $postvar ."[$key]", $value);
             }
         }
-        sort($times);
-        return implode(', ', $times);
+        else {
+            $confirmation->addHiddenItem($postvar, $values);
+        }
     }
+
 }
