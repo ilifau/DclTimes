@@ -19,6 +19,7 @@ class ilDclTimesFieldRepresentation extends ilDclPluginFieldRepresentation
 	public function getInputField(ilPropertyFormGUI $form, $record_id = 0)
     {
         $input = new ilDclTimesInputGUI($this->getField()->getTitle(), 'field_' . $this->getField()->getId());
+        $input->setInfo($this->getField()->getDescription());
         return $input;
 	}
 }
